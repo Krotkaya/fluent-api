@@ -122,16 +122,34 @@ public class PrintingConfig<TOwner>
 
     private string? SerializeValue(object value, Type valueType)
     {
-        if (typeSerializers.TryGetValue(valueType, out var typeSerializer))
+        try
         {
-            return typeSerializer(value);
+            if (typeSerializers.TryGetValue(valueType, out var typeSerializer))
+            {
+                return typeSerializer(value);
+            }
+        
+            if (cultures.TryGetValue(valueType, out var culture) 
+                && value is IFormattable formattable)
+                return formattable.ToString(null, culture);
+            return value.ToString();
         }
-        
-        if (cultures.TryGetValue(valueType, out var culture) 
-            && value is IFormattable formattable)
-            return formattable.ToString(null, culture);
-        
-        return value.ToString();
+        catch (Exception ex) when (IsSerializationException(ex))
+        {
+            return $"[Serialization error: {ex.Message}]";
+        }
+    }
+    
+    private static bool IsSerializationException(Exception ex)
+    {
+        return ex is FormatException or 
+            InvalidCastException or 
+            NullReferenceException or 
+            ArgumentOutOfRangeException or
+            DivideByZeroException or
+            OverflowException or
+            NotSupportedException or
+            InvalidOperationException;
     }
 
     private string PrintObject(object obj, int nestingLevel, Type type)
@@ -212,7 +230,7 @@ public class PrintingConfig<TOwner>
         }
         return stringBuilder.ToString();
     }
-
+    
     private static MemberInfo GetMemberInfo<TPropType>(Expression<Func<TOwner, TPropType>> memberSelector)
     {
         if (memberSelector.Body is MemberExpression memberExpression)

@@ -13,7 +13,7 @@ public class ObjectPrinterTests
     private Person? testPerson;
 
     [SetUp]
-    public void Setup()
+    public void SetUp()
     {
         testPerson = new Person
         {
@@ -275,14 +275,83 @@ public class ObjectPrinterTests
 
         var result = people.PrintToString();
 
-        result.Should()
-            .Contain("List`1").And
-            .Contain("[0] =").And
-            .Contain("[1] =").And
-            .Contain("Person").And
-            .Contain("Name = \"Sasha\"").And
-            .Contain("Age = 45").And
-            .Contain("Name = \"Masha\"").And
-            .Contain("Age = 30");
+        result.Should().Contain("List`1")
+            .And .Contain("[0] =")
+            .And .Contain("[1] =")
+            .And .Contain("Person")
+            .And .Contain("Name = \"Sasha\"")
+            .And .Contain("Age = 45")
+            .And .Contain("Name = \"Masha\"")
+            .And .Contain("Age = 30");
+    }
+    
+    [Test]
+    public void PrintToString_WithNestedObject_ShouldContainNestedProperties()
+    {
+        var office = new Office
+        {
+            Address = "Moskovskaya",
+            Manager = new Person { Name = "Sasha", Age = 44 }
+        };
+
+        var company = new Company
+        {
+            Name = "Kontur",
+            Office = office
+        };
+
+        var result = company.PrintToString();
+
+        result.Should().Contain("Name = \"Kontur\"")
+            .And.Contain("Office")
+            .And.Contain("Office =")
+            .And.Contain("Office")
+            .And.Contain("Address = \"Moskovskaya\"")
+            .And.Contain("Manager =")
+            .And.Contain("Person")
+            .And.Contain("Name = \"Sasha\"")
+            .And .Contain("Age = 44");
+    }
+
+    [Test]
+    public void PrintToString_WithNestedObject_ShouldIncludeAllLevels()
+    {
+        var root = new TreeNode
+        {
+            Value = "Root",
+            Child = new TreeNode
+            {
+                Value = "ChildOfRoot",
+                Child = new TreeNode
+                {
+                    Value = "Leaf"
+                }
+            }
+        };
+
+        var result = root.PrintToString();
+
+        result.Should() .Contain("TreeNode")
+            .And.Contain("Value = \"Root\"")
+            .And.Contain("Value = \"ChildOfRoot\"")
+            .And.Contain("Value = \"Leaf\"");
+    }
+    
+    private class Company
+    {
+        public string Name { get; set; }
+        public Office Office { get; set; }
+    }
+
+    private class Office
+    {
+        public string Address { get; set; }
+        public Person Manager { get; set; }
+    }
+
+    private class TreeNode
+    {
+        public string Value { get; set; }
+        public TreeNode Child { get; set; }
     }
 }
