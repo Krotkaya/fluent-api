@@ -75,10 +75,8 @@ public class PrintingConfig<TOwner>
     {
         if (obj == null) return "null" + Environment.NewLine;
         
-        if (visitedObjects.Contains(obj))
+        if (!visitedObjects.Add(obj))
             return $"Cyclic reference detected ({obj.GetType().Name})" + Environment.NewLine;
-
-        visitedObjects.Add(obj);
 
         try
         {
